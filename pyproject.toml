@@ -1,0 +1,26 @@
+[build-system]
+requires = ["celery>=4.2", "sqlalchemy"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "celery_sqlalchemy_scheduler"
+version = "0.3.0"
+authors = [
+  { name="Gabriel Niziolek", email="ganiziolek@gmail.com" },
+]
+description = "A Scheduler Based SQLalchemy For Celery"
+readme = "README.md"
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+  "sqlalchemy",
+  "celery>=4.2"
+]
+
+[project.urls]
+"Homepage" = "https://github.com/GaNiziolek/celery-sqlalchemy-scheduler"
+"Bug Tracker" = "https://github.com/GaNiziolek/celery-sqlalchemy-scheduler/issues"
