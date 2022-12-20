@@ -1,5 +1,5 @@
 [build-system]
-requires = ["celery>=4.2", "sqlalchemy"]
+requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
