@@ -16,9 +16,8 @@ from kombu.utils.json import dumps, loads
 from .session import session_cleanup
 from .session import SessionManager
 from .models import (
-    PeriodicTask, PeriodicTaskChanged,
-    CrontabSchedule, IntervalSchedule,
-    SolarSchedule,
+    PeriodicTask, CrontabSchedule, 
+    IntervalSchedule, SolarSchedule,
 )
 
 # This scheduler must wake up more frequently than the
@@ -282,7 +281,6 @@ class DatabaseScheduler(Scheduler):
 
     Entry = ModelEntry
     Model = PeriodicTask
-    Changes = PeriodicTaskChanged
 
     _schedule = None
     _last_timestamp = None
@@ -331,14 +329,12 @@ class DatabaseScheduler(Scheduler):
     def schedule_changed(self):
         session = self.Session()
         with session_cleanup(session):
-            changes = session.query(self.Changes).get(1)
+            changes = session.query(sqlalchemy.func.max(self.Model.date_changed).label('last_change')).first()
+
             if not changes:
-                changes = self.Changes(id=1)
-                session.add(changes)
-                session.commit()
                 return False
 
-            last, ts = self._last_timestamp, changes.last_update
+            last, ts = self._last_timestamp, changes.last_change
             try:
                 if ts and ts > (last if last else ts):
                     return True

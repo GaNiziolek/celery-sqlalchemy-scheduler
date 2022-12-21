@@ -171,49 +171,6 @@ class SolarSchedule(ModelBase, ModelMixin):
         )
 
 
-class PeriodicTaskChanged(ModelBase, ModelMixin):
-    """Helper table for tracking updates to periodic tasks."""
-
-    __tablename__ = 'celery_periodic_task_changed'
-
-    id = sa.Column(sa.Integer, primary_key=True)
-    last_update = sa.Column(
-        sa.DateTime(timezone=True), nullable=False, default=dt.datetime.now)
-
-    @classmethod
-    def changed(cls, mapper, connection, target):
-        """
-        :param mapper: the Mapper which is the target of this event
-        :param connection: the Connection being used
-        :param target: the mapped instance being persisted
-        """
-        if not target.no_changes:
-            cls.update_changed(mapper, connection, target)
-
-    @classmethod
-    def update_changed(cls, mapper, connection, target):
-        """
-        :param mapper: the Mapper which is the target of this event
-        :param connection: the Connection being used
-        :param target: the mapped instance being persisted
-        """
-        s = connection.execute(select([PeriodicTaskChanged]).
-                               where(PeriodicTaskChanged.id == 1).limit(1))
-        if not s:
-            s = connection.execute(insert(PeriodicTaskChanged),
-                                   last_update=dt.datetime.now())
-        else:
-            s = connection.execute(update(PeriodicTaskChanged).
-                                   where(PeriodicTaskChanged.id == 1).
-                                   values(last_update=dt.datetime.now()))
-
-    @classmethod
-    def last_change(cls, session):
-        periodic_tasks = session.query(PeriodicTaskChanged).get(1)
-        if periodic_tasks:
-            return periodic_tasks.last_update
-
-
 class PeriodicTask(ModelBase, ModelMixin):
 
     __tablename__ = 'celery_periodic_task'
@@ -298,17 +255,3 @@ class PeriodicTask(ModelBase, ModelMixin):
         elif self.solar:
             return self.solar.schedule
         raise ValueError('{} schedule is None!'.format(self.name))
-
-
-listen(PeriodicTask, 'after_insert', PeriodicTaskChanged.update_changed)
-listen(PeriodicTask, 'after_delete', PeriodicTaskChanged.update_changed)
-listen(PeriodicTask, 'after_update', PeriodicTaskChanged.changed)
-listen(IntervalSchedule, 'after_insert', PeriodicTaskChanged.update_changed)
-listen(IntervalSchedule, 'after_delete', PeriodicTaskChanged.update_changed)
-listen(IntervalSchedule, 'after_update', PeriodicTaskChanged.update_changed)
-listen(CrontabSchedule, 'after_insert', PeriodicTaskChanged.update_changed)
-listen(CrontabSchedule, 'after_delete', PeriodicTaskChanged.update_changed)
-listen(CrontabSchedule, 'after_update', PeriodicTaskChanged.update_changed)
-listen(SolarSchedule, 'after_insert', PeriodicTaskChanged.update_changed)
-listen(SolarSchedule, 'after_delete', PeriodicTaskChanged.update_changed)
-listen(SolarSchedule, 'after_update', PeriodicTaskChanged.update_changed)
